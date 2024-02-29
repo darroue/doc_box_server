@@ -11,7 +11,7 @@ module QrCode
         MSG: message,
         DT: payment_date,
         CC: currency
-      }.reject(& -> (k,v) { v.nil? || v.strip == "" })
+      }.reject(& -> (k,v) { v.nil? || v.to_s.strip == "" })
 
       qrcode = RQRCode::QRCode.new([
         'SPD',
