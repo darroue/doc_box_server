@@ -17,14 +17,16 @@ module DocBox
         requires :message, type: String
         requires :currency, type: String, values: %w(CZK)
         requires :payment_date, type: String
+        optional :border, type: Integer, default: 4
+        optional :size, type: Integer, default: 120
       end
       post :payment do
         content_type 'image/png'
 
-        qr_code = QrCode::PaymentService.new.call(**declared(params, include_missing: true).symbolize_keys)
+        qr_code = QrCode::PaymentService.new.call(**declared(params, include_missing: true).symbolize_keys.except(:border, :size))
         tmp_file = Tempfile.new
         File.open(tmp_file, "wb") do |file|
-          file.write(qr_code.as_png(border: (params["border"] || 0).to_i))
+          file.write(qr_code.as_png(border_modules: params[:border], size: params[:size]))
         end
 
         sendfile tmp_file.path
