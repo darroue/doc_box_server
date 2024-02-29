@@ -15,7 +15,7 @@ module DocBox
         requires :specific_symbol, type: Integer
         requires :amount, type: Integer
         requires :message, type: String
-        requires :currency, type: String, values: %w(CZK)
+        requires :currency, type: String, values: %w(CZK), default: "CZK"
         requires :payment_date, type: String
         optional :border, type: Integer, default: 4
         optional :size, type: Integer, default: 120
