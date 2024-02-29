@@ -1,0 +1,22 @@
+# Compose Version
+version: "3"
+
+services:
+  web:
+    # image: $IMAGE
+    image: europe-central2-docker.pkg.dev/petr-radous/ruby/$RUBY_VERSION:development
+    restart: always
+    stdin_open: true # docker run -i
+    tty: true
+    build:
+      context: .
+      dockerfile: web.dockerfile
+      args:
+        RUBY_VERSION: $RUBY_VERSION
+    env_file:
+      - .env
+    entrypoint: tail -f /dev/null
+    ports:
+      - 3000:3000
+    volumes:
+      - ./:/app/
