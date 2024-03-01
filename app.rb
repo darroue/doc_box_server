@@ -10,12 +10,12 @@ module DocBox
 
     resource :qrcode do
       params do
-        requires :iban, type: String
+        requires :iban, type: String, allow_blank: false
         requires :variable_symbol, type: Integer
         requires :specific_symbol, type: Integer
-        requires :amount, type: Integer
+        requires :amount, type: Integer, allow_blank: false
         requires :message, type: String
-        requires :currency, type: String, values: %w(CZK), default: "CZK"
+        requires :currency, type: String, values: %w(CZK), default: "CZK", allow_blank: false
         requires :payment_date, type: String
         optional :border, type: Integer, default: 4
         optional :size, type: Integer, default: 120
