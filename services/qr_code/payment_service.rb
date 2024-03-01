@@ -14,7 +14,7 @@ module QrCode
         CC: currency
       }.reject(& -> (k,v) { v.nil? || v.to_s.strip == "" })
 
-      qrcode = RQRCode::QRCode.new([
+      RQRCode::QRCode.new([
         'SPD',
         '1.0',
         data.map(& ->(k, v) { "#{k}:#{v}" })
