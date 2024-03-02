@@ -13,3 +13,5 @@ group :development do
   gem "rerun", "~> 0.14.0"
   gem "byebug", "~> 11.1"
 end
+
+gem "odf-report", "~> 0.7.3"
