@@ -56,10 +56,10 @@ module DocBox
     resource :document do
       resource :odt do
         params do
-          requires :filename, type: String, allow_blank: false
           requires :data, type: Hash, allow_blank: false
           requires :template, type: File, allow_blank: false
           optional :files, type: Array[File], allow_blank: false
+          optional :filename, type: String, allow_blank: false
         end
         post :fill do
           content_type 'application/vnd.oasis.opendocument.text'
@@ -68,6 +68,15 @@ module DocBox
           service = Document::FillService.new(declared(params), Tempfile.new(filename))
 
           sendfile service.call
+        end
+
+        params do
+          requires :file, type: File, allow_blank: false
+        end
+        post :convert_to_pdf do
+          content_type 'application/pdf'
+
+          sendfile Document::ConvertToPdfService.new(declared(params)).call
         end
       end
     end
