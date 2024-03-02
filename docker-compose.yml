@@ -4,7 +4,7 @@ version: "3"
 services:
   web:
     # image: $IMAGE
-    image: europe-central2-docker.pkg.dev/petr-radous/ruby/$RUBY_VERSION:development
+    image: darroue/ruby:${RUBY_VERSION}-development
     restart: always
     stdin_open: true # docker run -i
     tty: true
