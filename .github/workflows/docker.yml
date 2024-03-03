@@ -23,4 +23,4 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           push: true
-          tags: darroue/doc_box:latest
+          tags: darroue/doc_box_server:latest
