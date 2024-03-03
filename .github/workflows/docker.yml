@@ -23,5 +23,5 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           push: true
-          tags: darroue/doc_box_server:latest,darroue/doc_box_server:{{date 'YYYYMMDD'}}
-          secret-envs: RUBY_VERSION
+          tags: darroue/doc_box_server:latest
+          build-args: RUBY_VERSION="3.3.0"
