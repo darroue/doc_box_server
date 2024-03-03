@@ -1,7 +1,6 @@
 require_relative 'services/services'
 
 require 'grape'
-require 'byebug'
 
 module DocBox
   class API < Grape::API
