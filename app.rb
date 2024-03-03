@@ -57,8 +57,8 @@ module DocBox
         params do
           requires :data, type: Hash, allow_blank: false
           requires :template, type: File, allow_blank: false
-          optional :files, type: Array[File], allow_blank: false
-          optional :filename, type: String, allow_blank: false
+          optional :files, type: Array[File]
+          optional :filename, type: String
         end
         post :fill do
           content_type 'application/vnd.oasis.opendocument.text'
