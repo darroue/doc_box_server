@@ -73,11 +73,9 @@ module DocBox
           requires :file, type: File, allow_blank: false
         end
         post :convert_to_pdf do
-          require 'byebug'
-          byebug
           content_type 'application/pdf'
 
-          # sendfile Document::ConvertToPdfService.new(declared(params)).call
+          sendfile Document::ConvertToPdfService.new(declared(params)).call
         end
       end
     end
