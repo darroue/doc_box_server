@@ -24,4 +24,4 @@ jobs:
         with:
           push: true
           tags: darroue/doc_box_server:latest
-          build-args: RUBY_VERSION="3.3.0"
+          build-args: RUBY_VERSION=3.3.0
