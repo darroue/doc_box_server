@@ -1,22 +1,27 @@
 # Compose Version
 version: "3"
 
+networks:
+  doc_box:
+    external: true
+
 services:
-  web:
-    # image: $IMAGE
-    image: darroue/ruby:${RUBY_VERSION}-development
+  doc_box:
+    image: $IMAGE
+    # image: darroue/ruby:${RUBY_VERSION}-development
     restart: always
     stdin_open: true # docker run -i
     tty: true
     build:
       context: .
-      dockerfile: web.dockerfile
       args:
         RUBY_VERSION: $RUBY_VERSION
     env_file:
       - .env
-    entrypoint: tail -f /dev/null
-    ports:
-      - 3000:3000
-    volumes:
-      - ./:/app/
+    networks:
+      - doc_box
+    # entrypoint: tail -f /dev/null
+    # ports:
+    #   - 3000:3000
+    # volumes:
+    #   - ./:/app/
