@@ -2,15 +2,12 @@
 
 This code (Docker Image) serves Grape API that allows you manage multiple type of documents.
 
-## This is still in active development and code is not final. I'm gonna produce TAGs once I'm satisfied with staite of main branch.
+## This is still in active development and code is not final. I'm gonna produce TAGs once I'm satisfied with state of main branch.
 
-Currently working:
 
+## Currently working:
 * fill ODT template
 * generate PNG QR codes
 * convert ODT to PDF
 
-
-Created by
-
-Petr Radouš
+Created by ``Petr Radouš``
