@@ -14,7 +14,9 @@ module Document
 
     def call # rubocop:disable Metrics/MethodLength,Metrics/AbcSize
       ODFReport::Report.new(@template_file_path) do |r|
-        @data[:tables].each_pair do |table_name, rows|
+        tables = @data[:tables]
+        tables = tables.is_a?(Hash) ? tables : {}
+        tables.each_pair do |table_name, rows|
           columns = rows.first.keys
 
           r.add_table(table_name, rows, header: true) do |t|
