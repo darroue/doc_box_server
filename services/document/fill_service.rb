@@ -17,10 +17,20 @@ module Document
         tables = @data[:tables]
         tables = tables.is_a?(Hash) ? tables : {}
         tables.each_pair do |table_name, rows|
-          columns = rows.first.keys
+
+          columns = if rows.is_a?(Array)
+                      if rows.first.is_a?(Hash)
+                        if rows.first.keys.is_a?(Array)
+                          rows.first.keys
+                        end
+                      end
+                    end || []
+          rows = [] unless rows.is_a?(Array)
 
           r.add_table(table_name, rows, header: true) do |t|
-            columns.each do |column|
+           return unless columns.is_a?(Array)
+
+           columns.each do |column|
               t.add_field(column.to_sym) do |row|
                 row[column]
               end
@@ -31,6 +41,8 @@ module Document
         @data[:fields].each_pair do |key, value|
           r.add_field key.to_sym, value
         end
+
+        return unless @files.is_a?(Array)
 
         @files.each do |file|
           placeholder = @data[:images][file[:filename]]
