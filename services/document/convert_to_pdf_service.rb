@@ -9,7 +9,7 @@ module Document
 
     def call
       tempfile_path = @params[:file][:tempfile].path
-      system "cd /tmp && soffice --convert-to pdf:draw_pdf_Export #{tempfile_path}"
+      system "cd /tmp && soffice --headless -env:UserInstallation=file:///tmp/LibreOffice_Conversion_${USER} --convert-to pdf:draw_pdf_Export #{tempfile_path}"
 
       tempfile_path.sub(/.odt$/, '.pdf')
     end
