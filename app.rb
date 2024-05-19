@@ -55,8 +55,12 @@ module DocBox
     resource :document do
       resource :odt do
         params do
-          requires :data, type: Hash, allow_blank: false
-          requires :template, type: File, allow_blank: false
+          requires :data, type: Hash do
+            requires :fields, type: Hash
+            requires :images, type: Hash
+            requires :tables, type: Hash
+          end
+          requires :template, type: File
           optional :files, type: Array[File]
           optional :filename, type: String
         end
