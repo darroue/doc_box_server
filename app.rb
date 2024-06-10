@@ -35,7 +35,7 @@ module DocBox
         requires :specific_symbol, type: Integer, regexp: /^\d{10}$/
         requires :constant_symbol, type: Integer, regexp: /^\d{10}$/
         requires :amount, type: Integer, allow_blank: false, regexp: /^\d{1,7}(\.\d{1,2}){0,1}$/
-        requires :message, type: String, regexp: /^[A-Z0-9\s-]{0,60}$/
+        requires :message, type: String, regexp: %r{^[A-Z0-9\s\-$%*+-.,/:]{0,60}$}
         requires :currency, type: String, default: 'CZK', allow_blank: false, regexp: /^[A-Z]{3}$/
         requires :payment_date, type: Integer, regexp: /^\d{8}$/
       end
@@ -55,12 +55,8 @@ module DocBox
     resource :document do
       resource :odt do
         params do
-          requires :data, type: Hash do
-            requires :fields, type: Hash
-            requires :images, type: Hash
-            requires :tables, type: Hash
-          end
-          requires :template, type: File
+          requires :data, type: Hash, allow_blank: false
+          requires :template, type: File, allow_blank: false
           optional :files, type: Array[File]
           optional :filename, type: String
         end

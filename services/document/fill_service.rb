@@ -13,24 +13,20 @@ module Document
     end
 
     def call # rubocop:disable Metrics/MethodLength,Metrics/AbcSize
+      puts 'DEBUG:'
+      puts @params.inspect
+
       ODFReport::Report.new(@template_file_path) do |r|
         tables = @data[:tables]
         tables = tables.is_a?(Hash) ? tables : {}
         tables.each_pair do |table_name, rows|
-
-          columns = if rows.is_a?(Array)
-                      if rows.first.is_a?(Hash)
-                        if rows.first.keys.is_a?(Array)
-                          rows.first.keys
-                        end
-                      end
-                    end || []
+          columns = (rows.first.keys if rows.is_a?(Array) && rows.first.is_a?(Hash) && rows.first.keys.is_a?(Array))
           rows = [] unless rows.is_a?(Array)
 
           r.add_table(table_name, rows, header: true) do |t|
-           return unless columns.is_a?(Array)
+            return unless columns.is_a?(Array)
 
-           columns.each do |column|
+            columns.each do |column|
               t.add_field(column.to_sym) do |row|
                 row[column]
               end
