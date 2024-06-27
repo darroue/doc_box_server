@@ -24,4 +24,4 @@ RUN bundle config --local without "development test" \
   && bundle config --local path "/vendor/bundle" \
   && bundle config --local deployment "true"
 
-CMD bundle exec puma
+CMD bundle exec foreman start
