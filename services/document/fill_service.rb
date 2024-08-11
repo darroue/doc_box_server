@@ -1,4 +1,5 @@
 require 'odf-report'
+require 'json'
 
 require_relative '../../lib/odt_report/field'
 
@@ -17,8 +18,11 @@ module Document
       puts @params.inspect
 
       ODFReport::Report.new(@template_file_path) do |r|
-        tables = @data[:tables]
-        tables = tables.is_a?(Hash) ? tables : {}
+        tables = begin
+          JSON.parse(@data[:tables])
+        rescue StandardError
+          {}
+        end
         tables.each_pair do |table_name, rows|
           columns = (rows.first.keys if rows.is_a?(Array) && rows.first.is_a?(Hash) && rows.first.keys.is_a?(Array))
           rows = [] unless rows.is_a?(Array)
