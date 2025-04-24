@@ -31,9 +31,9 @@ module DocBox
     resource :qrcode do
       params do
         requires :iban, type: String, allow_blank: false, regexp: /^[A-Z0-9]{15,34}$/
-        requires :variable_symbol, type: Integer, regexp: /^\d{10}$/
-        requires :specific_symbol, type: Integer, regexp: /^\d{10}$/
-        requires :constant_symbol, type: Integer, regexp: /^\d{10}$/
+        requires :variable_symbol, type: Integer, regexp: /^\d{0,10}$/
+        requires :specific_symbol, type: Integer, regexp: /^\d{0,10}$/
+        requires :constant_symbol, type: Integer, regexp: /^\d{0,10}$/
         requires :amount, type: Integer, allow_blank: false, regexp: /^\d{1,7}(\.\d{1,2}){0,1}$/
         requires :message, type: String, regexp: %r{^[A-Z0-9\s\-$%*+-.,/:]{0,60}$}
         requires :currency, type: String, default: 'CZK', allow_blank: false, regexp: /^[A-Z]{3}$/
