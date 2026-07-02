@@ -1,6 +1,4 @@
-# Compose Version
-version: "3"
-
 services:
   doc_box:
+    build: .
     image: darroue/doc_box_server
