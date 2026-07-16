@@ -3,7 +3,7 @@ WORKDIR /root
 EXPOSE 3000
 
 RUN apt-get update \
-  && apt-get install -y zip libreoffice \
+  && apt-get install -y zip libreoffice pdftk-java poppler-utils \
   && rm -rf /var/lib/apt/lists/*
 
 COPY ./ /root

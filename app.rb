@@ -78,6 +78,45 @@ module DocBox
           sendfile Document::ConvertToPdfService.new(declared(params)).call
         end
       end
+
+      resource :pdf do
+        params do
+          requires :file, type: File, allow_blank: false
+        end
+        desc 'Extracts AcroForm text fields (name, page, rect in PDF points) from a PDF template'
+        post :fields do
+          Document::Pdf::ExtractFieldsService.new(declared(params)).call
+        end
+
+        params do
+          requires :file, type: File, allow_blank: false
+          requires :values, type: Hash, allow_blank: false
+          optional :flatten, type: Boolean, default: false
+        end
+        desc 'Fills AcroForm text fields with given values and returns the resulting PDF'
+        post :fill do
+          content_type 'application/pdf'
+
+          filename = declared(params)[:file][:filename]
+          service = Document::Pdf::FillService.new(declared(params), Tempfile.new(filename))
+
+          sendfile service.call
+        end
+
+        params do
+          requires :file, type: File, allow_blank: false
+          optional :page, type: Integer, default: 1
+          optional :dpi, type: Integer, default: 150
+        end
+        desc 'Rasterizes one PDF page to PNG, for overlaying field rects from /fields client-side'
+        post :preview do
+          content_type 'image/png'
+
+          service = Document::Pdf::PreviewService.new(declared(params), Tempfile.new(%w[preview .png]))
+
+          sendfile service.call
+        end
+      end
     end
   end
 end

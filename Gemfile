@@ -5,6 +5,8 @@ source 'https://rubygems.org'
 gem 'foreman'
 gem 'grape'
 gem 'odf-report'
+gem 'pdf-forms'
+gem 'pdf-reader'
 gem 'puma'
 gem 'rqrcode'
 
