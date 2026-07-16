@@ -2,6 +2,8 @@
 
 require 'pdf/reader'
 
+require_relative 'decrypt_service'
+
 module Document
   module Pdf
     # Reads AcroForm text fields (/FT /Tx) out of a PDF, including their
@@ -11,7 +13,7 @@ module Document
       TEXT_FIELD_TYPE = :Tx
 
       def initialize(params)
-        @file_path = params[:file][:tempfile].path
+        @file_path = DecryptService.call(params[:file][:tempfile].path)
       end
 
       def call
