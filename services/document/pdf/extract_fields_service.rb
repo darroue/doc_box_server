@@ -74,7 +74,17 @@ module Document
       end
 
       def field_name(widget, objects, seen = [])
-        walk_up(widget, objects, seen) { |dict| objects.deref!(dict[:T])&.to_s }
+        name = walk_up(widget, objects, seen) { |dict| objects.deref!(dict[:T])&.to_s }
+        sanitize_utf8(name)
+      end
+
+      # /T bývá PDFDocEncoding/UTF-16BE dekódované pdf-reader gemem, ale u
+      # poškozených/exotických PDF může zůstat s nevalidními UTF-8 bajty
+      # (např. "\xED") - to shodí JSON serializaci v Grape formatteru.
+      def sanitize_utf8(str)
+        return nil if str.nil?
+
+        str.dup.force_encoding('UTF-8').scrub
       end
 
       def walk_up(dict, objects, seen, &block)
