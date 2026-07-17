@@ -9,6 +9,7 @@ gem 'pdf-forms'
 gem 'pdf-reader'
 gem 'puma'
 gem 'rqrcode'
+gem 'rubyzip'
 
 group :development do
   gem 'byebug'

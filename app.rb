@@ -90,10 +90,12 @@ module DocBox
 
         params do
           requires :file, type: File, allow_blank: false
-          requires :values, type: Hash, allow_blank: false
+          optional :values, type: Hash
+          optional :positions, type: Array
           optional :flatten, type: Boolean, default: false
         end
-        desc 'Fills AcroForm text fields with given values and returns the resulting PDF'
+        desc 'Fills AcroForm text fields with given values and/or stamps text at given ' \
+             '[{page, x, y, text, size}] coordinates, and returns the resulting PDF'
         post :fill do
           content_type 'application/pdf'
 

@@ -175,6 +175,7 @@ DEPENDENCIES
   rqrcode
   rubocop
   ruby-lsp
+  rubyzip
 
 BUNDLED WITH
   4.0.15
