@@ -7,6 +7,7 @@ require 'tempfile'
 require_relative 'decrypt_service'
 require_relative 'overlay_fill_service'
 require_relative 'mask_sanitizer_service'
+require_relative 'font_sanitizer_service'
 
 module Document
   module Pdf
@@ -18,7 +19,9 @@ module Document
       REPLACEMENT_FONT = '/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf'
 
       def initialize(params, tempfile)
-        @template_path = MaskSanitizerService.call(DecryptService.call(params[:file][:tempfile].path))
+        template_path = DecryptService.call(params[:file][:tempfile].path)
+        template_path = MaskSanitizerService.call(template_path)
+        @template_path = FontSanitizerService.call(template_path)
         @tempfile_path = tempfile.path
         @values = parse_values(params[:values])
         @positions = params[:positions]
