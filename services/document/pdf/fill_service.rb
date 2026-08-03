@@ -28,7 +28,7 @@ module Document
         if @values.any?
           fill_target = @positions ? Tempfile.new(%w[filled .pdf]).path : @tempfile_path
           pdftk = PdfForms.new(data_format: 'FdfHex')
-          pdftk.fill_form(source, fill_target, @values, need_appearances: true, flatten: @flatten)
+          pdftk.fill_form(source, fill_target, @values, need_appearances: false, flatten: @flatten)
           source = fill_target
         end
 
