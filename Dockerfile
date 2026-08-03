@@ -3,7 +3,7 @@ WORKDIR /root
 EXPOSE 3000
 
 RUN apt-get update \
-  && apt-get install -y zip libreoffice pdftk-java poppler-utils qpdf \
+  && apt-get install -y zip libreoffice pdftk-java poppler-utils qpdf fonts-dejavu-core \
   && rm -rf /var/lib/apt/lists/*
 
 COPY ./ /root

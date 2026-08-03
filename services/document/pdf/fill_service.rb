@@ -14,6 +14,8 @@ module Document
     # PDFs with no, or incomplete, AcroForm fields. Output stays editable by
     # default (flatten: false) so the user can still touch it up.
     class FillService
+      REPLACEMENT_FONT = '/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf'
+
       def initialize(params, tempfile)
         @template_path = DecryptService.call(params[:file][:tempfile].path)
         @tempfile_path = tempfile.path
@@ -28,7 +30,8 @@ module Document
         if @values.any?
           fill_target = @positions ? Tempfile.new(%w[filled .pdf]).path : @tempfile_path
           pdftk = PdfForms.new(data_format: 'FdfHex')
-          pdftk.fill_form(source, fill_target, @values, need_appearances: false, flatten: @flatten)
+          pdftk.fill_form(source, fill_target, @values, need_appearances: false, flatten: @flatten,
+                                                         replacement_font: REPLACEMENT_FONT)
           source = fill_target
         end
 
