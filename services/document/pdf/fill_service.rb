@@ -31,7 +31,7 @@ module Document
       def call
         source = @template_path
 
-        if @values.any?
+        if @values.any? || @flatten
           fill_target = @positions ? Tempfile.new(%w[filled .pdf]).path : @tempfile_path
           pdftk = PdfForms.new(data_format: 'FdfHex')
           pdftk.fill_form(source, fill_target, @values, need_appearances: false, flatten: @flatten,
