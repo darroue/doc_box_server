@@ -17,6 +17,8 @@ module Document
     class MaskSanitizerService
       MASK_REF = /\/Mask (\d+) 0 R/.freeze
 
+      # Returns [path, tempfile] - see DecryptService for why the Tempfile
+      # object itself must be kept alive by the caller alongside the path.
       def self.call(pdf_path)
         new(pdf_path).call
       end
@@ -27,10 +29,10 @@ module Document
 
       def call
         qdf = to_qdf(@pdf_path)
-        return @pdf_path unless qdf
+        return [@pdf_path, nil] unless qdf
 
         sanitized = strip_array_masks(qdf)
-        return @pdf_path if sanitized == qdf
+        return [@pdf_path, nil] if sanitized == qdf
 
         rebuild(sanitized)
       end
@@ -62,9 +64,9 @@ module Document
 
           out = Tempfile.new(['sanitized', '.pdf'])
           _out, _err, status = Open3.capture3('qpdf', qdf_file.path, out.path)
-          return @pdf_path unless status.success? || status.exitstatus == 3
+          return [@pdf_path, nil] unless status.success? || status.exitstatus == 3
 
-          out.path
+          [out.path, out]
         end
       end
     end

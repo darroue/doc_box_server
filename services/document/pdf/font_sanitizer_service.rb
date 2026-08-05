@@ -21,6 +21,8 @@ module Document
     class FontSanitizerService
       FONT_PATH = '/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf'
 
+      # Returns [path, tempfile] - see DecryptService for why the Tempfile
+      # object itself must be kept alive by the caller alongside the path.
       def self.call(pdf_path)
         new(pdf_path).call
       end
@@ -31,10 +33,10 @@ module Document
 
       def call
         qdf = to_qdf(@pdf_path)
-        return @pdf_path unless qdf
+        return [@pdf_path, nil] unless qdf
 
         patched = patch_broken_fonts(qdf)
-        return @pdf_path if patched.nil?
+        return [@pdf_path, nil] if patched.nil?
 
         rebuild(patched)
       end
@@ -135,9 +137,9 @@ module Document
 
           out = Tempfile.new(['fontsanitized', '.pdf'])
           _out, _err, status = Open3.capture3('qpdf', qdf_file.path, out.path)
-          return @pdf_path unless status.success? || status.exitstatus == 3
+          return [@pdf_path, nil] unless status.success? || status.exitstatus == 3
 
-          out.path
+          [out.path, out]
         end
       end
 

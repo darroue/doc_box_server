@@ -19,9 +19,21 @@ module Document
       REPLACEMENT_FONT = '/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf'
 
       def initialize(params, tempfile)
-        template_path = DecryptService.call(params[:file][:tempfile].path)
-        template_path = MaskSanitizerService.call(template_path)
-        @template_path = FontSanitizerService.call(template_path)
+        # Tempfile objects returned alongside each intermediate path must
+        # stay referenced for the lifetime of this service - otherwise GC
+        # can unlink one mid-pipeline (Tempfile's finalizer) before pdftk/
+        # soffice gets a chance to read it. See DecryptService.
+        @retained_tempfiles = []
+
+        template_path, decrypted = DecryptService.call(params[:file][:tempfile].path)
+        @retained_tempfiles << decrypted
+
+        template_path, masked = MaskSanitizerService.call(template_path)
+        @retained_tempfiles << masked
+
+        @template_path, fonts_fixed = FontSanitizerService.call(template_path)
+        @retained_tempfiles << fonts_fixed
+
         @tempfile_path = tempfile.path
         @values = parse_values(params[:values])
         @positions = params[:positions]
@@ -32,7 +44,10 @@ module Document
         source = @template_path
 
         if @values.any? || @flatten
-          fill_target = @positions ? Tempfile.new(%w[filled .pdf]).path : @tempfile_path
+          fill_tempfile = Tempfile.new(%w[filled .pdf]) if @positions
+          @retained_tempfiles << fill_tempfile
+          fill_target = fill_tempfile ? fill_tempfile.path : @tempfile_path
+
           pdftk = PdfForms.new(data_format: 'FdfHex')
           pdftk.fill_form(source, fill_target, @values, need_appearances: false, flatten: @flatten,
                                                          replacement_font: REPLACEMENT_FONT)
