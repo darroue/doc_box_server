@@ -7,25 +7,32 @@ require 'zip'
 require 'cgi'
 require 'tmpdir'
 require 'json'
+require 'base64'
 
 module Document
   module Pdf
-    # Stamps free text at explicit PDF-point coordinates onto a template PDF
-    # that has no (or incomplete) AcroForm fields to fill via FillService.
+    # Stamps free text and/or images (e.g. e-signatures) at explicit PDF-point
+    # coordinates onto a template PDF that has no (or incomplete) AcroForm
+    # fields to fill via FillService.
     #
     # No PDF-writing gem is used (hexapdf is AGPL, prawn pulls in font
     # embedding we don't need): a throwaway ODF text document is built by
     # hand, sized page-for-page to the template, with one absolutely
-    # positioned draw:frame per requested position. LibreOffice (already
-    # used elsewhere in this app for ODT->PDF conversion) renders it to a
-    # same-page-count overlay PDF, which pdftk then merges onto the
-    # template via `multistamp` - both tools already in the Docker image.
+    # positioned draw:frame per requested position (a draw:text-box for
+    # `type: 'text'` positions, a draw:image for `type: 'image'` positions -
+    # the PNG bytes are embedded into the ODT package under Pictures/).
+    # LibreOffice (already used elsewhere in this app for ODT->PDF
+    # conversion) renders it to a same-page-count overlay PDF, which pdftk
+    # then merges onto the template via `multistamp` - both tools already
+    # in the Docker image.
     class OverlayFillService
       PT_TO_CM = 2.54 / 72.0
       DEFAULT_FONT_SIZE = 10.0
       FONT_NAME = 'DejaVu Sans'
+      POSITION_TYPES = %w[text image].freeze
 
       class OutOfRangeError < StandardError; end
+      class InvalidPositionError < StandardError; end
 
       def initialize(template_path, positions, output_path)
         @template_path = template_path
@@ -54,18 +61,42 @@ module Document
 
       def parse_positions(positions)
         positions = JSON.parse(positions) if positions.is_a?(String)
-        Array(positions).map { |p| normalize(p) }
+        Array(positions).map.with_index { |p, index| normalize(p, index) }
       end
 
-      def normalize(position)
+      def normalize(position, index)
         p = position.transform_keys(&:to_s)
-        {
+        type = (p['type'] || 'text').to_s
+        raise InvalidPositionError, "unknown position type: #{type}" unless POSITION_TYPES.include?(type)
+
+        base = {
           page: Integer(p.fetch('page')),
           x: Float(p.fetch('x')),
           y: Float(p.fetch('y')),
-          text: p.fetch('text').to_s,
-          size: p['size'] ? Float(p['size']) : DEFAULT_FONT_SIZE
+          type: type
         }
+
+        type == 'image' ? base.merge(image_attrs(p, index)) : base.merge(text_attrs(p))
+      end
+
+      def text_attrs(attrs)
+        {
+          text: attrs.fetch('text').to_s,
+          size: attrs['size'] ? Float(attrs['size']) : DEFAULT_FONT_SIZE
+        }
+      end
+
+      def image_attrs(attrs, index)
+        {
+          image: decode_image(attrs.fetch('image')),
+          width: Float(attrs.fetch('width')),
+          height: Float(attrs.fetch('height')),
+          picture_name: "sig_#{index}.png"
+        }
+      end
+
+      def decode_image(base64)
+        Base64.decode64(base64.to_s.sub(%r{\Adata:image/png;base64,}, ''))
       end
 
       def page_size(page)
@@ -81,18 +112,25 @@ module Document
       end
 
       def build_odt(odt_path, page_sizes, by_page)
+        image_positions = @positions.select { |p| p[:type] == 'image' }
+
         Zip::OutputStream.open(odt_path) do |zos|
           zos.put_next_entry('mimetype', nil, nil, Zip::Entry::STORED)
           zos.write 'application/vnd.oasis.opendocument.text'
 
           zos.put_next_entry('META-INF/manifest.xml')
-          zos.write manifest_xml
+          zos.write manifest_xml(image_positions)
 
           zos.put_next_entry('styles.xml')
           zos.write styles_xml(page_sizes)
 
           zos.put_next_entry('content.xml')
           zos.write content_xml(page_sizes, by_page)
+
+          image_positions.each do |p|
+            zos.put_next_entry("Pictures/#{p[:picture_name]}")
+            zos.write p[:image]
+          end
         end
 
         odt_path
@@ -109,14 +147,18 @@ module Document
         odt_path.sub(/\.odt\z/, '.pdf')
       end
 
-      def manifest_xml
+      def manifest_xml(image_positions = [])
+        image_entries = image_positions.map do |p|
+          %( <manifest:file-entry manifest:media-type="image/png" manifest:full-path="Pictures/#{p[:picture_name]}"/>\n)
+        end.join
+
         <<~XML
           <?xml version="1.0" encoding="UTF-8"?>
           <manifest:manifest xmlns:manifest="urn:oasis:names:tc:opendocument:xmlns:manifest:1.0" manifest:version="1.2">
            <manifest:file-entry manifest:full-path="/" manifest:version="1.2" manifest:media-type="application/vnd.oasis.opendocument.text"/>
            <manifest:file-entry manifest:full-path="content.xml" manifest:media-type="text/xml"/>
            <manifest:file-entry manifest:full-path="styles.xml" manifest:media-type="text/xml"/>
-          </manifest:manifest>
+          #{image_entries}</manifest:manifest>
         XML
       end
 
@@ -153,7 +195,7 @@ module Document
 
       def content_xml(page_sizes, by_page)
         layouts = master_page_names(page_sizes)
-        sizes = @positions.map { |p| p[:size] }.uniq
+        sizes = @positions.select { |p| p[:type] == 'text' }.map { |p| p[:size] }.uniq
 
         font_style_xml = sizes.map do |size|
           <<~XML
@@ -187,6 +229,7 @@ module Document
             xmlns:draw="urn:oasis:names:tc:opendocument:xmlns:drawing:1.0"
             xmlns:fo="urn:oasis:names:tc:opendocument:xmlns:xsl-fo-compatible:1.0"
             xmlns:svg="urn:oasis:names:tc:opendocument:xmlns:svg-compatible:1.0"
+            xmlns:xlink="http://www.w3.org/1999/xlink"
             office:version="1.2">
             <office:font-face-decls>
               <style:font-face style:name="#{FONT_NAME}" svg:font-family="&quot;#{FONT_NAME}&quot;"/>
@@ -208,6 +251,14 @@ module Document
       end
 
       def frame_xml(position, page_size, page_number)
+        if position[:type] == 'image'
+          image_frame_xml(position, page_size, page_number)
+        else
+          text_frame_xml(position, page_size, page_number)
+        end
+      end
+
+      def text_frame_xml(position, page_size, page_number)
         page_width, page_height = page_size
         height_pt = position[:size] * 1.5
         width_pt = [page_width - position[:x], position[:size] * 4].max
@@ -218,6 +269,17 @@ module Document
             <draw:text-box>
               <text:p text:style-name="#{font_style_name(position[:size])}">#{escape(position[:text])}</text:p>
             </draw:text-box>
+          </draw:frame>
+        XML
+      end
+
+      def image_frame_xml(position, page_size, page_number)
+        _page_width, page_height = page_size
+        top_pt = [page_height - position[:y] - position[:height], 0].max
+
+        <<~XML
+          <draw:frame draw:style-name="FR" svg:width="#{cm(position[:width])}" svg:height="#{cm(position[:height])}" svg:x="#{cm(position[:x])}" svg:y="#{cm(top_pt)}" text:anchor-type="page" text:anchor-page-number="#{page_number}">
+            <draw:image xlink:href="Pictures/#{position[:picture_name]}" xlink:type="simple" xlink:show="embed" xlink:actuate="onLoad"/>
           </draw:frame>
         XML
       end

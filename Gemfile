@@ -17,3 +17,7 @@ group :development do
   gem 'rubocop'
   gem 'ruby-lsp'
 end
+
+group :test do
+  gem 'minitest'
+end

@@ -167,6 +167,7 @@ DEPENDENCIES
   byebug
   foreman
   grape
+  minitest
   odf-report
   pdf-forms
   pdf-reader

@@ -94,8 +94,11 @@ module DocBox
           optional :positions, type: Array
           optional :flatten, type: Boolean, default: false
         end
-        desc 'Fills AcroForm text fields with given values and/or stamps text at given ' \
-             '[{page, x, y, text, size}] coordinates, and returns the resulting PDF'
+        desc 'Fills AcroForm text fields with given values and/or stamps overlays at given ' \
+             'positions, and returns the resulting PDF. Each position is either a text stamp ' \
+             '{page, x, y, text, size} (type: "text", the default when type is omitted) or an ' \
+             'image stamp {page, x, y, type: "image", image, width, height} where `image` is ' \
+             'base64-encoded PNG bytes and width/height are in PDF points'
         post :fill do
           content_type 'application/pdf'
 
