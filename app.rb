@@ -61,12 +61,13 @@ module DocBox
           optional :filename, type: String
         end
         post :fill do
-          content_type 'application/vnd.oasis.opendocument.text'
+          content_type 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
 
           filename = declared(params)[:filename] || declared(params)[:template][:filename]
           service = Document::FillService.new(declared(params), Tempfile.new(filename))
 
-          sendfile service.call
+          odt_path = service.call
+          sendfile Document::ConvertToDocxService.new(odt_path).call
         end
 
         params do
